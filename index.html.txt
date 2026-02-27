@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueCredit Union | Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hidden { display: none; }
+        .active-tab { background-color: #1e40af; color: white; border-radius: 12px; }
+    </style>
+</head>
+<body class="bg-[#0f172a] font-sans text-slate-200">
+
+    <div id="login-section" class="min-h-screen flex items-center justify-center p-6 bg-slate-950">
+        <div class="max-w-md w-full bg-white rounded-[2rem] p-10 shadow-2xl text-slate-800 text-center">
+            <h1 class="text-3xl font-black text-blue-700 italic mb-2">BlueCredit</h1>
+            <p class="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-8">Admin Terminal</p>
+            <form id="login-form" class="space-y-4 text-left">
+                <input type="text" id="admin-id" placeholder="Admin ID" required class="w-full p-4 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                <input type="password" id="admin-pass" placeholder="Password" required class="w-full p-4 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                <button type="submit" class="w-full bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg">Authorize Access</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-dashboard" class="hidden min-h-screen flex">
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-6 shadow-xl">
+            <div class="text-xl font-black text-blue-400 mb-10">BlueCredit</div>
+            <nav class="flex-1 space-y-2">
+                <button onclick="showTab('overview')" id="btn-overview" class="active-tab w-full text-left p-4 flex items-center font-bold">Overview</button>
+                <button onclick="showTab('members')" id="btn-members" class="w-full text-left p-4 flex items-center font-bold text-slate-500 hover:text-white transition">Members</button>
+                <button onclick="showTab('logs'); fetchLogs();" id="btn-logs" class="w-full text-left p-4 flex items-center font-bold text-slate-500 hover:text-white transition">Audit Logs</button>
+            </nav>
+            <button onclick="location.reload()" class="p-4 text-red-500 font-bold flex items-center"><i class="fas fa-sign-out-alt mr-2"></i>Logout</button>
+        </aside>
+
+        <main class="flex-1 p-12 overflow-y-auto">
+            <div id="tab-overview">
+                <h2 class="text-4xl font-black mb-8">Bank Liquidity</h2>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700">
+                        <p class="text-slate-500 text-xs font-bold uppercase mb-2">Total System Assets</p>
+                        <h3 class="text-4xl font-black" id="vault-total">$0.00</h3>
+                    </div>
+                    <div class="bg-slate-800 p-8 rounded-3xl border border-slate-700">
+                        <p class="text-slate-500 text-xs font-bold uppercase mb-2">Active Members</p>
+                        <h3 class="text-4xl font-black" id="member-count">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-members" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-4xl font-black">Member Registry</h2>
+                    <button onclick="toggleModal('add-member-modal')" class="bg-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-500 shadow-lg">Register Member</button>
+                </div>
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-700 text-slate-400 text-[10px] uppercase font-black">
+                            <tr><th class="p-6">Name</th><th class="p-6">Account No</th><th class="p-6">Balance</th><th class="p-6 text-center">Action</th></tr>
+                        </thead>
+                        <tbody id="member-table-body" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-logs" class="hidden">
+                <h2 class="text-4xl font-black mb-8">Audit Trail</h2>
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-700 text-slate-400 text-[10px] uppercase font-black">
+                            <tr><th class="p-6">Date</th><th class="p-6">Type</th><th class="p-6">User ID</th><th class="p-6">Final Balance</th></tr>
+                        </thead>
+                        <tbody id="log-table-body" class="divide-y divide-slate-700 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="add-member-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+        <div class="bg-white rounded-[2rem] w-full max-w-md p-10 text-slate-900 shadow-2xl">
+            <h3 class="text-2xl font-black mb-6">Create Account</h3>
+            <form id="register-form" class="space-y-4">
+                <input type="text" id="reg-name" placeholder="Full Legal Name" required class="w-full p-4 bg-slate-50 border rounded-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="email" id="reg-email" placeholder="Email Address" required class="w-full p-4 bg-slate-50 border rounded-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="password" id="reg-pass" placeholder="Access Password" required class="w-full p-4 bg-slate-50 border rounded-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="submit" class="w-full bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg">Confirm Member</button>
+                <button type="button" onclick="toggleModal('add-member-modal')" class="w-full text-slate-400 font-bold text-sm mt-2">Close</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="edit-balance-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+        <div class="bg-white rounded-[2rem] w-full max-w-md p-10 text-slate-900 text-center shadow-2xl">
+            <h3 class="text-2xl font-black mb-2" id="edit-user-name">User</h3>
+            <p class="text-slate-400 text-xs font-bold uppercase mb-8 tracking-widest">Adjust Balance</p>
+            <form id="edit-balance-form" class="space-y-6 text-left">
+                <input type="hidden" id="edit-user-id">
+                <input type="number" id="new-balance-input" step="0.01" required class="w-full p-6 bg-slate-50 border rounded-2xl text-3xl font-black focus:ring-2 focus:ring-green-500 outline-none">
+                <button type="submit" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl text-lg shadow-xl">Update Ledger</button>
+                <button type="button" onclick="toggleModal('edit-balance-modal')" class="w-full text-slate-400 font-bold text-sm text-center">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        let currentEditId = null;
+
+        // AUTH FAKE BYPASS (Matches AD-102938 / password123 from Neon)
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            fetchMembers();
+        });
+
+        function showTab(t) {
+            ['overview', 'members', 'logs'].forEach(tab => {
+                document.getElementById('tab-' + tab).classList.add('hidden');
+                document.getElementById('btn-' + tab).classList.remove('active-tab', 'text-white');
+                document.getElementById('btn-' + tab).classList.add('text-slate-500');
+            });
+            document.getElementById('tab-' + t).classList.remove('hidden');
+            document.getElementById('btn-' + t).classList.add('active-tab', 'text-white');
+        }
+
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+
+        async function fetchMembers() {
+            const res = await fetch(`/api/members`);
+            const members = await res.json();
+            const table = document.getElementById('member-table-body');
+            table.innerHTML = '';
+            let total = 0;
+            members.forEach(m => {
+                total += parseFloat(m.balance);
+                table.innerHTML += `
+                    <tr class="hover:bg-slate-700/20 border-b border-slate-700/50">
+                        <td class="p-6 font-bold text-white">${m.full_name}</td>
+                        <td class="p-6 font-mono text-blue-400">${m.account_number}</td>
+                        <td class="p-6 font-black text-green-400">$${parseFloat(m.balance).toLocaleString()}</td>
+                        <td class="p-6 text-center">
+                            <button onclick="openEdit(${m.id}, '${m.full_name}', ${m.balance})" class="bg-slate-700 px-5 py-2 rounded-xl text-[10px] font-black hover:bg-white hover:text-black transition">EDIT</button>
+                        </td>
+                    </tr>`;
+            });
+            document.getElementById('vault-total').innerText = `$${total.toLocaleString()}`;
+            document.getElementById('member-count').innerText = members.length;
+        }
+
+        function openEdit(id, name, balance) {
+            currentEditId = id;
+            document.getElementById('edit-user-name').innerText = name;
+            document.getElementById('new-balance-input').value = balance;
+            document.getElementById('edit-user-id').value = id;
+            toggleModal('edit-balance-modal');
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await fetch(`/api/register`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    full_name: document.getElementById('reg-name').value,
+                    email: document.getElementById('reg-email').value,
+                    password: document.getElementById('reg-pass').value
+                })
+            });
+            toggleModal('add-member-modal');
+            fetchMembers();
+            document.getElementById('register-form').reset();
+        });
+
+        document.getElementById('edit-balance-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await fetch(`/api/update-balance`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    id: currentEditId,
+                    balance: document.getElementById('new-balance-input').value
+                })
+            });
+            toggleModal('edit-balance-modal');
+            fetchMembers();
+        });
+
+        async function fetchLogs() {
+            const res = await fetch(`/api/logs`);
+            const logs = await res.json();
+            document.getElementById('log-table-body').innerHTML = logs.map(l => `
+                <tr class="border-b border-slate-700/50">
+                    <td class="p-6 text-slate-500 font-mono">${new Date(l.created_at).toLocaleString()}</td>
+                    <td class="p-6 font-black text-blue-400">${l.type}</td>
+                    <td class="p-6 font-bold text-white">#USR-0${l.user_id}</td>
+                    <td class="p-6 font-black text-green-400">$${parseFloat(l.new_balance).toLocaleString()}</td>
+                </tr>`).join('');
+        }
+    </script>
+</body>
+</html>
